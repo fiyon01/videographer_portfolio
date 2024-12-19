@@ -344,6 +344,36 @@ const VideographerPortfolio = () => {
         return null;
     }
   };
+  const [consultationType, setConsultationType] = useState("general");
+  const [contactReason, setContactReason] = useState("");
+  const handleConsultationClick = () => {
+    setContactReason("consultation");
+    setShowContactModal(true);
+  };
+  const handleScheduleCall = () => {
+    setContactReason("call");
+    setShowContactModal(true);
+  };
+  const getModalTitle = () => {
+    switch (contactReason) {
+      case "consultation":
+        return "Book Consultation";
+      case "call":
+        return "Schedule a Call";
+      default:
+        return "Contact Us";
+    }
+  };
+  const getModalDescription = () => {
+    switch (contactReason) {
+      case "consultation":
+        return "Book a consultation to discuss your project in detail.";
+      case "call":
+        return "Schedule a quick call to discuss your requirements.";
+      default:
+        return "Get in touch with us.";
+    }
+  };
   return (
     <div className="w-screen min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
       {showToast && (
@@ -526,14 +556,14 @@ const VideographerPortfolio = () => {
                 </button>
                 <button
                   className="flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-8 py-4 rounded-full hover:bg-white/20 transition-colors border border-white/20 group"
-                  onClick={() => scrollToContact("consultation")}
+                  onClick={handleConsultationClick}
                 >
                   <Mail className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   <span>Get Quote</span>
                 </button>
                 <button
                   className="flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-8 py-4 rounded-full hover:bg-white/20 transition-colors border border-white/20 group"
-                  onClick={() => scrollToContact("call")}
+                  onClick={handleScheduleCall}
                 >
                   <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   <span>Schedule Call</span>
@@ -676,8 +706,9 @@ const VideographerPortfolio = () => {
                 >
                   <option value="all">All</option>
                   <option value="wedding">Wedding</option>
-                  <option value="documentary">Documentary</option>
                   <option value="commercial">Commercial</option>
+                  <option value="documentary">Documentary</option>
+                  <option value="event">Event</option>
                 </select>
               </div>
             </div>
@@ -687,35 +718,53 @@ const VideographerPortfolio = () => {
             {[
               {
                 id: 1,
-                title: "Mountain Wedding",
+                title: "Destination Wedding Film",
                 thumbnail:
                   "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf",
-                video: "https://www.facebook.com/reel/935904038380240",
+                video: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 category: "wedding",
               },
               {
                 id: 2,
-                title: "Urban Documentary",
+                title: "Commercial Brand Story",
                 thumbnail:
                   "https://images.unsplash.com/photo-1536240478700-b869070f9279",
-                video: "https://www.facebook.com/reel/1331101711622593",
-                category: "wedding",
-              },
-              {
-                id: 3,
-                title: "Nature Series",
-                thumbnail:
-                  "https://images.unsplash.com/photo-1465188162913-8fb5709d6d57",
-                video: "https://www.facebook.com/reel/124611190647716",
+                video: "https://www.youtube.com/watch?v=M7lc1UVf-VE",
                 category: "commercial",
               },
               {
-                id: 4,
-                title: "Nature Series",
+                id: 3,
+                title: "Wedding Highlights",
                 thumbnail:
                   "https://images.unsplash.com/photo-1465188162913-8fb5709d6d57",
-                video: "https://www.facebook.com/reel/339766831742124",
+                video:
+                  "https://www.facebook.com/facebook/videos/10153231379946729/",
                 category: "wedding",
+              },
+              {
+                id: 4,
+                title: "Travel Documentary",
+                thumbnail:
+                  "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800",
+                video: "https://www.youtube.com/watch?v=hZB9h_ZLpF0",
+                category: "documentary",
+              },
+              {
+                id: 5,
+                title: "Event Coverage",
+                thumbnail:
+                  "https://images.unsplash.com/photo-1492684223066-81342ee5ff30",
+                video:
+                  "https://www.facebook.com/facebook/videos/10153231379946729/",
+                category: "event",
+              },
+              {
+                id: 6,
+                title: "Product Launch",
+                thumbnail:
+                  "https://images.unsplash.com/photo-1493612276216-ee3925520721",
+                video: "https://www.youtube.com/watch?v=TcMBFSGVi1c",
+                category: "commercial",
               },
             ]
               .filter(
@@ -735,8 +784,14 @@ const VideographerPortfolio = () => {
                     alt={item.title}
                     className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Play className="text-white" size={48} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end p-4">
+                    <Play className="text-white mb-2" size={48} />
+                    <h3 className="text-white text-lg font-semibold text-center">
+                      {item.title}
+                    </h3>
+                    <p className="text-gray-200 text-sm capitalize">
+                      {item.category}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -1029,7 +1084,7 @@ const VideographerPortfolio = () => {
               <div className="flex gap-4">
                 <button
                   className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition"
-                  onClick={() => scrollToContact("consultation")}
+                  onClick={handleConsultationClick}
                 >
                   <Calendar size={20} />
                   Book Consultation
@@ -1416,46 +1471,70 @@ const VideographerPortfolio = () => {
             >
               <X size={24} />
             </button>
-            <h3 className="text-2xl font-bold mb-6 dark:text-white">
-              Schedule a Call
+            <h3 className="text-2xl font-bold mb-2 dark:text-white">
+              {getModalTitle()}
             </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {getModalDescription()}
+            </p>
             <form onSubmit={handleContactSubmit}>
               <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Name"
-                  className="w-full px-4 py-2 rounded-lg border"
-                  required
-                />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  className="w-full px-4 py-2 rounded-lg border"
-                  required
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    placeholder="Name"
+                    className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600"
+                    required
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600"
+                    required
+                  />
+                </div>
                 <input
                   type="tel"
                   placeholder="Phone"
-                  className="w-full px-4 py-2 rounded-lg border"
+                  className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600"
                   required
                 />
+                {contactReason === "consultation" && (
+                  <select
+                    value={consultationType}
+                    onChange={(e) => setConsultationType(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600"
+                  >
+                    <option value="wedding">Wedding Videography</option>
+                    <option value="commercial">Commercial Project</option>
+                    <option value="documentary">Documentary</option>
+                    <option value="event">Event Coverage</option>
+                  </select>
+                )}
                 <DatePicker
                   selected={bookingDate}
                   onChange={setBookingDate}
                   showTimeSelect
-                  className="w-full px-4 py-2 rounded-lg border"
+                  timeFormat="HH:mm"
+                  timeIntervals={30}
+                  dateFormat="MMMM d, yyyy h:mm aa"
+                  className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600"
+                  placeholderText="Select date and time"
+                  required
                 />
                 <textarea
-                  placeholder="Message"
-                  className="w-full px-4 py-2 rounded-lg border"
+                  placeholder="Tell us about your project"
+                  className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600"
                   rows={4}
                   required
                 />
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg"
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
                 >
-                  Schedule Call
+                  {contactReason === "consultation"
+                    ? "Book Consultation"
+                    : "Schedule Call"}
                 </button>
               </div>
             </form>
