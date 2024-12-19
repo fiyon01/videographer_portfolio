@@ -269,24 +269,12 @@ const VideographerPortfolio = () => {
 
       <section className="relative h-screen overflow-hidden">
         <div className="absolute inset-0 w-full h-full">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover"
-            poster="https://images.unsplash.com/photo-1533738363-b7f9aef128ce"
-          >
-            <source
-              src="https://assets.mixkit.co/videos/preview/mixkit-set-of-plateaus-seen-from-the-heights-in-a-sunset-26070-large.mp4"
-              type="video/mp4"
-            />
             <img
               src="https://images.unsplash.com/photo-1533738363-b7f9aef128ce"
               alt="Videographer background"
               className="absolute inset-0 w-full h-full object-cover"
             />
-          </video>
+    
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-black/50 backdrop-blur-[2px]">
           <div className="container mx-auto h-full flex items-center px-4">
