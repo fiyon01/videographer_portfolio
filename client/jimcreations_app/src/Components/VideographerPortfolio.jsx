@@ -784,7 +784,7 @@ const VideographerPortfolio = () => {
                         "https://images.unsplash.com/photo-1534528741775-53994a69daeb",
                       text: "Absolutely amazing work! Captured our wedding perfectly.",
                       rating: 5,
-                      video: "",
+                      video: "https://example.com/testimonial1.mp4",
                     },
                   ][currentTestimonial];
                   return (
