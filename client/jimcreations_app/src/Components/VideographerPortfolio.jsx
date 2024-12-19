@@ -36,13 +36,62 @@ import {
   Globe,
   Heart,
   Briefcase,
+  ArrowLeft,
+  CreditCard,
+  DollarSign,
 } from "lucide-react";
-import { render } from "react-dom";
 import React, { useEffect, useState, createContext, useContext } from "react";
+import { render } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { createRoot } from "react-dom/client";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+const stripePromise = loadStripe("your_publishable_key");
+const getVideoEmbedComponent = (videoUrl) => {
+  if (videoUrl.includes("facebook.com")) {
+    return (
+      <div
+        className="fb-video"
+        data-href={videoUrl}
+        data-width="auto"
+        data-show-text="false"
+      />
+    );
+  } else if (
+    videoUrl.includes("youtube.com") ||
+    videoUrl.includes("youtu.be")
+  ) {
+    const videoId = videoUrl.includes("youtu.be")
+      ? videoUrl.split("/").pop()
+      : videoUrl.split("v=")[1].split("&")[0];
+    return (
+      <iframe
+        src={`https://www.youtube.com/embed/${videoId}`}
+        className="w-full h-full rounded-lg"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    );
+  } else {
+    return (
+      <video
+        src={videoUrl}
+        controls
+        autoPlay
+        className="w-full h-full rounded-lg"
+      >
+        Your browser does not support the video tag.
+      </video>
+    );
+  }
+};
 const ThemeContext = createContext({
   theme: "light",
   toggleTheme: () => {},
@@ -80,7 +129,7 @@ const VideographerPortfolio = () => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [activeVideo, setActiveVideo] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const [bookingDate, setBookingDate] = useState(null);
   const [projectType, setProjectType] = useState("");
   const [budget, setBudget] = useState(1000);
@@ -89,6 +138,14 @@ const VideographerPortfolio = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [paymentStep, setPaymentStep] = useState("select");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [showHelpModal, setShowHelpModal] = useState(false);
   const { theme, toggleTheme } = useContext(ThemeContext);
   const showNotification = (message) => {
     setToastMessage(message);
@@ -100,13 +157,25 @@ const VideographerPortfolio = () => {
     setIsSubscribed(true);
     showNotification("Successfully subscribed to newsletter!");
   };
+  const handleBookingSubmit = async (e) => {
+    e.preventDefault();
+    switch (paymentMethod) {
+      case "mpesa":
+        break;
+      case "stripe":
+        break;
+      // ... other payment methods
+    }
+    setShowBookingModal(false);
+  };
   const handleContactSubmit = (e) => {
     e.preventDefault();
     showNotification("Your message has been sent successfully!");
-    e.target.reset();
-    setBookingDate(null);
-    setProjectType("");
-    setBudget(1000);
+    setShowContactModal(false);
+  };
+  const handlePaymentMethodChange = (method) => {
+    setPaymentMethod(method);
+    setPaymentStep("details");
   };
   const blogPosts = [
     {
@@ -157,6 +226,123 @@ const VideographerPortfolio = () => {
     contactSection?.scrollIntoView({
       behavior: "smooth",
     });
+  };
+  const openContactModal = () => setShowContactModal(true);
+  const handlePaymentSubmit = async () => {
+    try {
+      switch (paymentMethod) {
+        case "mpesa":
+          showNotification("Processing M-Pesa payment...");
+          break;
+        case "stripe":
+        case "card":
+          showNotification("Processing card payment...");
+          break;
+        case "paystack":
+          showNotification("Processing Paystack payment...");
+          break;
+      }
+    } catch (error) {
+      showNotification("Payment failed. Please try again.");
+    }
+  };
+  const CardPaymentForm = () => {
+    const stripe = useStripe();
+    const elements = useElements();
+    const [error, setError] = useState(null);
+    const [processing, setProcessing] = useState(false);
+    const handleSubmit = async (event) => {
+      event.preventDefault();
+      if (!stripe || !elements) return;
+      setProcessing(true);
+      setError(null);
+      const { error: stripeError, paymentMethod } =
+        await stripe.createPaymentMethod({
+          type: "card",
+          card: elements.getElement(CardElement),
+        });
+      if (stripeError) {
+        setError(stripeError.message);
+        setProcessing(false);
+      } else {
+        showNotification("Payment method created successfully!");
+        setProcessing(false);
+        setShowBookingModal(false);
+      }
+    };
+    return (
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="p-4 border rounded-lg bg-white dark:bg-gray-700">
+          <CardElement
+            options={{
+              style: {
+                base: {
+                  fontSize: "16px",
+                  color: theme === "dark" ? "#fff" : "#424770",
+                  "::placeholder": {
+                    color: "#aab7c4",
+                  },
+                },
+              },
+            }}
+          />
+        </div>
+        {error && <div className="text-red-500 text-sm">{error}</div>}
+        <button
+          type="submit"
+          disabled={!stripe || processing}
+          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+        >
+          {processing ? "Processing..." : "Pay Now"}
+        </button>
+      </form>
+    );
+  };
+  const renderPaymentForm = () => {
+    switch (paymentMethod) {
+      case "mpesa":
+        return (
+          <div className="space-y-4">
+            <input
+              type="tel"
+              placeholder="M-Pesa Phone Number"
+              className="w-full px-4 py-2 rounded-lg border"
+            />
+          </div>
+        );
+      case "stripe":
+      case "card":
+        return (
+          <Elements stripe={stripePromise}>
+            <CardPaymentForm />
+          </Elements>
+        );
+      case "paypal":
+        return (
+          <div className="mt-4">
+            <button
+              onClick={() => {
+                showNotification("PayPal integration coming soon!");
+              }}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg"
+            >
+              Pay with PayPal
+            </button>
+          </div>
+        );
+      case "paystack":
+        return (
+          <div className="space-y-4">
+            <input
+              type="email"
+              placeholder="Email"
+              className="w-full px-4 py-2 rounded-lg border"
+            />
+          </div>
+        );
+      default:
+        return null;
+    }
   };
   return (
     <div className="w-screen min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
@@ -269,12 +455,11 @@ const VideographerPortfolio = () => {
 
       <section className="relative h-screen overflow-hidden">
         <div className="absolute inset-0 w-full h-full">
-            <img
-              src="https://scontent.fnbo2-1.fna.fbcdn.net/v/t39.30808-6/274343325_2027951197378195_7748995526855260032_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHGEfFmDuoy-QWj3mkw83vnXgliGEujMtZeCWIYS6My1uEBFQ7SSaoDcUl8wrVPVsmT4FejNaKhCd7rj9irTB0u&_nc_ohc=DFzRxP7egEQQ7kNvgEHeVO5&_nc_zt=23&_nc_ht=scontent.fnbo2-1.fna&_nc_gid=AoAENdb8ILnNSR3lNnJmMMo&oh=00_AYDmVAPqvl-7Q_WCk397qlejLAkeAxVm5ebMp2HKUyu0EA&oe=6769F5AF"
-              alt="Videographer background"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-    
+          <img
+            src="https://scontent.fnbo2-1.fna.fbcdn.net/v/t39.30808-6/274343325_2027951197378195_7748995526855260032_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHGEfFmDuoy-QWj3mkw83vnXgliGEujMtZeCWIYS6My1uEBFQ7SSaoDcUl8wrVPVsmT4FejNaKhCd7rj9irTB0u&_nc_ohc=DFzRxP7egEQQ7kNvgEHeVO5&_nc_zt=23&_nc_ht=scontent.fnbo2-1.fna&_nc_gid=AoAENdb8ILnNSR3lNnJmMMo&oh=00_AYDmVAPqvl-7Q_WCk397qlejLAkeAxVm5ebMp2HKUyu0EA&oe=6769F5AF"
+            alt="Videographer background"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-black/50 backdrop-blur-[2px]">
           <div className="container mx-auto h-full flex items-center px-4">
@@ -505,8 +690,7 @@ const VideographerPortfolio = () => {
                 title: "Mountain Wedding",
                 thumbnail:
                   "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf",
-                video:
-                  "https://www.facebook.com/reel/935904038380240",
+                video: "https://www.facebook.com/reel/935904038380240",
                 category: "wedding",
               },
               {
@@ -514,8 +698,7 @@ const VideographerPortfolio = () => {
                 title: "Urban Documentary",
                 thumbnail:
                   "https://images.unsplash.com/photo-1536240478700-b869070f9279",
-                video:
-                  "https://www.facebook.com/reel/1331101711622593",
+                video: "https://www.facebook.com/reel/1331101711622593",
                 category: "wedding",
               },
               {
@@ -523,8 +706,7 @@ const VideographerPortfolio = () => {
                 title: "Nature Series",
                 thumbnail:
                   "https://images.unsplash.com/photo-1465188162913-8fb5709d6d57",
-                video:
-                  "https://www.facebook.com/reel/124611190647716",
+                video: "https://www.facebook.com/reel/124611190647716",
                 category: "commercial",
               },
               {
@@ -532,8 +714,7 @@ const VideographerPortfolio = () => {
                 title: "Nature Series",
                 thumbnail:
                   "https://images.unsplash.com/photo-1465188162913-8fb5709d6d57",
-                video:
-                  "https://www.facebook.com/reel/339766831742124",
+                video: "https://www.facebook.com/reel/339766831742124",
                 category: "wedding",
               },
             ]
@@ -603,7 +784,7 @@ const VideographerPortfolio = () => {
                         "https://images.unsplash.com/photo-1534528741775-53994a69daeb",
                       text: "Absolutely amazing work! Captured our wedding perfectly.",
                       rating: 5,
-                      video: "https://example.com/testimonial1.mp4",
+                      video: "",
                     },
                   ][currentTestimonial];
                   return (
@@ -754,7 +935,13 @@ const VideographerPortfolio = () => {
                     </li>
                   ))}
                 </ul>
-                <button className="w-full mt-8 bg-black dark:bg-white text-white dark:text-black py-3 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition">
+                <button
+                  className="w-full mt-8 bg-black dark:bg-white text-white dark:text-black py-3 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition"
+                  onClick={() => {
+                    setSelectedPackage(pkg);
+                    setShowBookingModal(true);
+                  }}
+                >
                   Book Now
                 </button>
               </div>
@@ -1087,14 +1274,267 @@ const VideographerPortfolio = () => {
           onClick={closeVideoModal}
         >
           <div className="w-full max-w-4xl aspect-video">
-            <video
-              src={activeVideo.video}
-              controls
-              autoPlay
-              className="w-full h-full rounded-lg"
+            {getVideoEmbedComponent(activeVideo.video)}
+          </div>
+        </div>
+      )}
+
+      {showBookingModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-8 w-full max-w-2xl my-8 relative">
+            <button
+              onClick={() => {
+                if (paymentStep === "details") {
+                  setPaymentStep("select");
+                } else {
+                  setShowBookingModal(false);
+                }
+              }}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
             >
-              Your browser does not support the video tag.
-            </video>
+              {paymentStep === "details" ? (
+                <ArrowLeft size={24} />
+              ) : (
+                <X size={24} />
+              )}
+            </button>
+
+            <h3 className="text-2xl font-bold mb-6 dark:text-white">
+              {paymentStep === "select"
+                ? `Book ${selectedPackage?.title}`
+                : `Pay with ${paymentMethod.toUpperCase()}`}
+            </h3>
+
+            {paymentStep === "select" ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setPaymentStep("details");
+                }}
+              >
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      placeholder="Name"
+                      className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600"
+                      required
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600"
+                      required
+                    />
+                  </div>
+                  <input
+                    type="tel"
+                    placeholder="Phone"
+                    className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600"
+                    required
+                  />
+                  <DatePicker
+                    selected={bookingDate}
+                    onChange={setBookingDate}
+                    className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600"
+                  />
+
+                  <div className="space-y-2">
+                    <h4 className="font-semibold">Payment Method</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {["mpesa", "stripe", "paystack", "paypal", "card"].map(
+                        (method) => (
+                          <button
+                            key={method}
+                            type="button"
+                            onClick={() => handlePaymentMethodChange(method)}
+                            className={`p-4 border rounded-lg transition-all ${paymentMethod === method ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" : "hover:border-blue-300 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
+                          >
+                            <div className="flex items-center justify-center gap-2">
+                              {method === "mpesa" && (
+                                <Phone className="w-5 h-5" />
+                              )}
+                              {method === "stripe" && (
+                                <CreditCard className="w-5 h-5" />
+                              )}
+                              {method === "paystack" && (
+                                <CreditCard className="w-5 h-5" />
+                              )}
+                              {method === "paypal" && (
+                                <DollarSign className="w-5 h-5" />
+                              )}
+                              {method === "card" && (
+                                <CreditCard className="w-5 h-5" />
+                              )}
+                              <span className="font-medium">
+                                {method.toUpperCase()}
+                              </span>
+                            </div>
+                          </button>
+                        ),
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg"
+                  >
+                    Complete Booking
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div>
+                {renderPaymentForm()}
+                <div className="flex gap-4 mt-6">
+                  <button
+                    onClick={() => setPaymentStep("select")}
+                    className="w-1/2 bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={handlePaymentSubmit}
+                    className="w-1/2 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
+                  >
+                    Complete Payment
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showContactModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-2xl w-full relative">
+            <button
+              onClick={() => setShowContactModal(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+            >
+              <X size={24} />
+            </button>
+            <h3 className="text-2xl font-bold mb-6 dark:text-white">
+              Schedule a Call
+            </h3>
+            <form onSubmit={handleContactSubmit}>
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Name"
+                  className="w-full px-4 py-2 rounded-lg border"
+                  required
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  className="w-full px-4 py-2 rounded-lg border"
+                  required
+                />
+                <input
+                  type="tel"
+                  placeholder="Phone"
+                  className="w-full px-4 py-2 rounded-lg border"
+                  required
+                />
+                <DatePicker
+                  selected={bookingDate}
+                  onChange={setBookingDate}
+                  showTimeSelect
+                  className="w-full px-4 py-2 rounded-lg border"
+                />
+                <textarea
+                  placeholder="Message"
+                  className="w-full px-4 py-2 rounded-lg border"
+                  rows={4}
+                  required
+                />
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg"
+                >
+                  Schedule Call
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <motion.button
+        initial={{
+          y: 100,
+        }}
+        animate={{
+          y: 0,
+        }}
+        className="fixed bottom-8 right-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 z-40 flex items-center gap-2"
+        onClick={() => setShowHelpModal(true)}
+      >
+        <MessageSquare size={24} />
+        <span className="hidden sm:inline">Need Help?</span>
+      </motion.button>
+
+      {showHelpModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-2xl w-full relative">
+            <button
+              onClick={() => setShowHelpModal(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+            >
+              <X size={24} />
+            </button>
+            <h3 className="text-2xl font-bold mb-6 dark:text-white">
+              Contact Us
+            </h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                showNotification("Message sent successfully!");
+                setShowHelpModal(false);
+              }}
+            >
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 dark:text-white">
+                    How can we help?
+                  </label>
+                  <select className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600">
+                    <option>General Inquiry</option>
+                    <option>Technical Support</option>
+                    <option>Booking Issue</option>
+                    <option>Payment Problem</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Name"
+                  className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600"
+                  required
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600"
+                  required
+                />
+                <textarea
+                  placeholder="Message"
+                  rows={4}
+                  className="w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
+                >
+                  Send Message
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
