@@ -506,7 +506,7 @@ const VideographerPortfolio = () => {
                 thumbnail:
                   "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf",
                 video:
-                  "https://www.facebook.com/share/r/19P1bL7rgx/",
+                  "https://www.facebook.com/reel/935904038380240",
                 category: "wedding",
               },
               {
@@ -515,8 +515,8 @@ const VideographerPortfolio = () => {
                 thumbnail:
                   "https://images.unsplash.com/photo-1536240478700-b869070f9279",
                 video:
-                  "https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-city-traffic-at-night-11-large.mp4",
-                category: "documentary",
+                  "https://www.facebook.com/reel/1331101711622593",
+                category: "wedding",
               },
               {
                 id: 3,
@@ -524,8 +524,17 @@ const VideographerPortfolio = () => {
                 thumbnail:
                   "https://images.unsplash.com/photo-1465188162913-8fb5709d6d57",
                 video:
-                  "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4",
+                  "https://www.facebook.com/reel/124611190647716",
                 category: "commercial",
+              },
+              {
+                id: 4,
+                title: "Nature Series",
+                thumbnail:
+                  "https://images.unsplash.com/photo-1465188162913-8fb5709d6d57",
+                video:
+                  "https://www.facebook.com/reel/339766831742124",
+                category: "wedding",
               },
             ]
               .filter(
