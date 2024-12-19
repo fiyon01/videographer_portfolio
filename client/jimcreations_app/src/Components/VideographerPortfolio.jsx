@@ -855,8 +855,8 @@ const VideographerPortfolio = () => {
             </div>
             <div className="order-1 md:order-2">
               <img
-                src="https://images.unsplash.com/photo-1533738363-b7f9aef128ce"
-                alt="John Doe"
+                src="https://scontent.fnbo2-1.fna.fbcdn.net/v/t39.30808-6/274343325_2027951197378195_7748995526855260032_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHGEfFmDuoy-QWj3mkw83vnXgliGEujMtZeCWIYS6My1uEBFQ7SSaoDcUl8wrVPVsmT4FejNaKhCd7rj9irTB0u&_nc_ohc=1FSpgu_dBxcQ7kNvgESNbPf&_nc_zt=23&_nc_ht=scontent.fnbo2-1.fna&_nc_gid=AukUFGCw_avKBdIn9Ecij-x&oh=00_AYCvBAinKvGaWVTOgLVjPJtklD4Omi1FfhqtZ_rBOmQDCQ&oe=6769F5AF"
+                alt="Jim"
                 className="w-full h-full object-cover rounded-lg"
               />
             </div>
